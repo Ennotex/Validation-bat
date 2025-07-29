@@ -1,67 +1,66 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Validation de votre BAT</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Validation de BAT</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: url("fond.jpg") no-repeat center center fixed;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('banniere-linkedin-brice2025.svg') no-repeat center center fixed;
       background-size: cover;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      padding: 30px;
+      align-items: center;
       min-height: 100vh;
     }
     .container {
       background-color: rgba(255, 255, 255, 0.95);
-      border-radius: 20px;
       padding: 20px;
-      max-width: 600px;
+      border-radius: 12px;
+      max-width: 800px;
       width: 100%;
-      box-shadow: 0 0 30px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     h1 {
-      font-size: 24px;
       text-align: center;
-      margin-bottom: 20px;
+      color: #333;
     }
     iframe {
       width: 100%;
       height: 500px;
-      border: 1px solid #ccc;
-      margin-bottom: 20px;
-      border-radius: 10px;
+      border: none;
+      margin: 20px 0;
     }
     textarea {
       width: 100%;
       padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-top: 10px;
-      margin-bottom: 15px;
+      margin: 10px 0;
       resize: vertical;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
-    .button-group {
+    .buttons {
       display: flex;
       justify-content: space-between;
+      gap: 10px;
     }
     button {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
+      flex: 1;
+      padding: 12px;
       font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
     }
-    .accept {
+    .approve {
       background-color: #28a745;
       color: white;
     }
-    .refuse {
+    .reject {
       background-color: #dc3545;
       color: white;
     }
@@ -69,57 +68,48 @@
 </head>
 <body>
   <div class="container">
-    <h1>🖋️ Validation de votre BAT</h1>
-    <iframe id="pdf-preview" src="" allowfullscreen></iframe>
-
-    <div class="button-group">
-      <button class="accept" onclick="validateBAT()">✅ Je valide ce BAT</button>
-      <button class="refuse" onclick="refuseBAT()">❌ Je refuse ce BAT</button>
+    <h1>🖊️ Validation de votre BAT</h1>
+    <iframe id="batPreview" src=""></iframe>
+    <textarea id="comment" placeholder="Veuillez indiquer la raison du refus..."></textarea>
+    <div class="buttons">
+      <button class="approve" onclick="validateBAT()">✅ Je valide ce BAT</button>
+      <button class="reject" onclick="rejectBAT()">❌ Je refuse ce BAT</button>
     </div>
-    <textarea id="reason" placeholder="Veuillez indiquer la raison du refus..."></textarea>
   </div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const pdfUrl = urlParams.get('pdf');
     if (pdfUrl) {
-      document.getElementById("pdf-preview").src = pdfUrl;
+      document.getElementById('batPreview').src = pdfUrl.replace("/view", "/preview");
     }
 
     function validateBAT() {
       fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           status: "validé",
           commentaire: ""
         })
-      });
-      alert("BAT validé avec succès ✅");
+      }).then(() => alert("BAT validé ! Merci."));
     }
 
-    function refuseBAT() {
-      const comment = document.getElementById("reason").value.trim();
-      if (!comment) {
-        alert("Veuillez indiquer la raison du refus.");
+    function rejectBAT() {
+      const comment = document.getElementById("comment").value;
+      if (!comment.trim()) {
+        alert("Merci d’indiquer la raison du refus.");
         return;
       }
       fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
           status: "refusé",
           commentaire: comment
         })
-      });
-      alert("Refus transmis. Merci pour votre retour ✉️");
+      }).then(() => alert("BAT refusé. Merci pour votre retour."));
     }
   </script>
 </body>
 </html>
-
-
