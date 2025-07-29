@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Validation BAT</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('banniere-linkedin-brice2025.svg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 30px;
+      max-width: 800px;
+      width: 90%;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 20px;
+      resize: none;
+    }
+
+    .btns {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 30px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    .btn-accept {
+      background-color: #28a745;
+    }
+
+    .btn-decline {
+      background-color: #dc3545;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🖊️ Validation de votre BAT</h2>
+    <iframe src="https://example.com/ton-pdf.pdf" title="Prévisualisation du BAT"></iframe>
+
+    <textarea placeholder="Veuillez indiquer la raison du refus..."></textarea>
+
+    <div class="btns">
+      <button class="btn btn-accept">✅ Je valide ce BAT</button>
+      <button class="btn btn-decline">❌ Je refuse ce BAT</button>
+    </div>
+  </div>
+</body>
+</html>
