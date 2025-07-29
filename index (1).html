@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Validation de votre BAT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: url("fond.jpg") no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 30px;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 20px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 0 30px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      border-radius: 10px;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      resize: vertical;
+    }
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+    }
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .accept {
+      background-color: #28a745;
+      color: white;
+    }
+    .refuse {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖋️ Validation de votre BAT</h1>
+    <iframe id="pdf-preview" src="" allowfullscreen></iframe>
+
+    <div class="button-group">
+      <button class="accept" onclick="validateBAT()">✅ Je valide ce BAT</button>
+      <button class="refuse" onclick="refuseBAT()">❌ Je refuse ce BAT</button>
+    </div>
+    <textarea id="reason" placeholder="Veuillez indiquer la raison du refus..."></textarea>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const pdfUrl = urlParams.get('pdf');
+    if (pdfUrl) {
+      document.getElementById("pdf-preview").src = pdfUrl;
+    }
+
+    function validateBAT() {
+      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          status: "validé",
+          commentaire: ""
+        })
+      });
+      alert("BAT validé avec succès ✅");
+    }
+
+    function refuseBAT() {
+      const comment = document.getElementById("reason").value.trim();
+      if (!comment) {
+        alert("Veuillez indiquer la raison du refus.");
+        return;
+      }
+      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          status: "refusé",
+          commentaire: comment
+        })
+      });
+      alert("Refus transmis. Merci pour votre retour ✉️");
+    }
+  </script>
+</body>
+</html>
+
+
