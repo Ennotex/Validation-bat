@@ -3,123 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Validation de votre BAT</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <title>Validation de BAT</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: url("fond.jpg") no-repeat center center fixed;
+      font-family: Arial, sans-serif;
+      background: url('fond.jpg') no-repeat center center fixed;
       background-size: cover;
       display: flex;
       justify-content: center;
       align-items: flex-start;
       padding: 30px;
-      min-height: 100vh;
     }
     .container {
-      background-color: rgba(255, 255, 255, 0.95);
-      border-radius: 20px;
-      padding: 20px;
-      max-width: 600px;
+      max-width: 900px;
       width: 100%;
-      box-shadow: 0 0 30px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
     }
     h1 {
-      font-size: 24px;
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
     iframe {
       width: 100%;
-      height: 500px;
+      height: 600px;
       border: 1px solid #ccc;
       margin-bottom: 20px;
-      border-radius: 10px;
     }
     textarea {
       width: 100%;
       padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-top: 10px;
-      margin-bottom: 15px;
-      resize: vertical;
+      font-size: 1rem;
+      margin-bottom: 20px;
     }
-    .button-group {
+    .buttons {
       display: flex;
       justify-content: space-between;
     }
-    button {
-      padding: 12px 20px;
+    .buttons button {
+      flex: 1;
+      padding: 15px;
+      margin: 5px;
+      font-size: 1rem;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
       cursor: pointer;
+      color: white;
     }
-    .accept {
+    .approve {
       background-color: #28a745;
-      color: white;
     }
-    .refuse {
+    .reject {
       background-color: #dc3545;
-      color: white;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🖋️ Validation de votre BAT</h1>
-    <iframe id="pdf-preview" src="" allowfullscreen></iframe>
+    <h1>✍️ Validation de votre BAT</h1>
+    <iframe id="pdfViewer" src="" allowfullscreen></iframe>
 
-    <div class="button-group">
-      <button class="accept" onclick="validateBAT()">✅ Je valide ce BAT</button>
-      <button class="refuse" onclick="refuseBAT()">❌ Je refuse ce BAT</button>
+    <textarea id="refusReason" placeholder="Veuillez indiquer la raison du refus..."></textarea>
+    <div class="buttons">
+      <button class="approve" onclick="validerBAT()">✅ Je valide ce BAT</button>
+      <button class="reject" onclick="refuserBAT()">❌ Je refuse ce BAT</button>
     </div>
-    <textarea id="reason" placeholder="Veuillez indiquer la raison du refus..."></textarea>
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const pdfUrl = urlParams.get('pdf');
-    if (pdfUrl) {
-      document.getElementById("pdf-preview").src = pdfUrl;
+    const params = new URLSearchParams(window.location.search);
+    const pdfURL = params.get('pdf');
+
+    if (pdfURL) {
+      document.getElementById('pdfViewer').src = pdfURL;
+    } else {
+      document.getElementById('pdfViewer').outerHTML = "<p style='color:red'>Aucun PDF fourni dans l'URL.</p>";
     }
 
-    function validateBAT() {
-      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
-        method: "POST",
+    function validerBAT() {
+      fetch('https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76', {
+        method: 'POST',
+        body: JSON.stringify({ statut: 'validé', commentaire: '', pdf: pdfURL }),
         headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          status: "validé",
-          commentaire: ""
-        })
-      });
-      alert("BAT validé avec succès ✅");
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(() => alert('BAT validé ! Merci.'))
+      .catch(() => alert("Erreur lors de l'envoi."));
     }
 
-    function refuseBAT() {
-      const comment = document.getElementById("reason").value.trim();
-      if (!comment) {
-        alert("Veuillez indiquer la raison du refus.");
+    function refuserBAT() {
+      const reason = document.getElementById('refusReason').value;
+      if (!reason.trim()) {
+        alert('Merci de renseigner la raison du refus.');
         return;
       }
-      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
-        method: "POST",
+      fetch('https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76', {
+        method: 'POST',
+        body: JSON.stringify({ statut: 'refusé', commentaire: reason, pdf: pdfURL }),
         headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          status: "refusé",
-          commentaire: comment
-        })
-      });
-      alert("Refus transmis. Merci pour votre retour ✉️");
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(() => alert('BAT refusé avec succès.'))
+      .catch(() => alert("Erreur lors de l'envoi."));
     }
   </script>
 </body>
 </html>
-
-
