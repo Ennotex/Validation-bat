@@ -3,127 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Validation BAT</title>
+  <title>Validation de votre BAT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background: url('banniere-linkedin-brice2025.svg') no-repeat center center fixed;
+      font-family: 'Inter', sans-serif;
+      background: url("fond.jpg") no-repeat center center fixed;
       background-size: cover;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
+      padding: 30px;
       min-height: 100vh;
     }
-
     .container {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 15px;
-      padding: 30px;
-      max-width: 800px;
-      width: 90%;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 20px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 0 30px rgba(0,0,0,0.1);
     }
-
-    h2 {
+    h1 {
+      font-size: 24px;
       text-align: center;
-      color: #333;
       margin-bottom: 20px;
     }
-
     iframe {
       width: 100%;
       height: 500px;
       border: 1px solid #ccc;
-      border-radius: 10px;
       margin-bottom: 20px;
+      border-radius: 10px;
     }
-
     textarea {
       width: 100%;
-      height: 80px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      padding: 10px;
-      margin-top: 20px;
-      resize: none;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      resize: vertical;
     }
-
-    .btns {
+    .button-group {
       display: flex;
-      justify-content: space-around;
-      margin-top: 30px;
-      gap: 20px;
-      flex-wrap: wrap;
+      justify-content: space-between;
     }
-
-    .btn {
-      padding: 12px 24px;
-      font-size: 16px;
+    button {
+      padding: 12px 20px;
       border: none;
       border-radius: 8px;
+      font-size: 16px;
       cursor: pointer;
-      color: #fff;
     }
-
-    .btn-accept {
+    .accept {
       background-color: #28a745;
+      color: white;
     }
-
-    .btn-decline {
+    .refuse {
       background-color: #dc3545;
-    }
-
-    .btn:hover {
-      opacity: 0.9;
+      color: white;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>🖊️ Validation de votre BAT</h2>
-    <iframe id="pdfViewer" title="Prévisualisation du BAT"></iframe>
+    <h1>🖋️ Validation de votre BAT</h1>
+    <iframe id="pdf-preview" src="" allowfullscreen></iframe>
 
-    <textarea id="reason" placeholder="Veuillez indiquer la raison du refus..."></textarea>
-
-    <div class="btns">
-      <button class="btn btn-accept">✅ Je valide ce BAT</button>
-      <button class="btn btn-decline">❌ Je refuse ce BAT</button>
+    <div class="button-group">
+      <button class="accept" onclick="validateBAT()">✅ Je valide ce BAT</button>
+      <button class="refuse" onclick="refuseBAT()">❌ Je refuse ce BAT</button>
     </div>
+    <textarea id="reason" placeholder="Veuillez indiquer la raison du refus..."></textarea>
   </div>
 
   <script>
-    // Chargement dynamique du PDF
     const urlParams = new URLSearchParams(window.location.search);
-    const pdf = urlParams.get("pdf");
-    if (pdf) {
-      document.getElementById("pdfViewer").src = pdf;
+    const pdfUrl = urlParams.get('pdf');
+    if (pdfUrl) {
+      document.getElementById("pdf-preview").src = pdfUrl;
     }
 
-    const webhookURL = "https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76";
-
-    document.querySelector(".btn-accept").addEventListener("click", () => {
-      fetch(webhookURL, {
+    function validateBAT() {
+      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "accepted", pdf })
-      }).then(() => alert("Merci pour votre validation !"));
-    });
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          status: "validé",
+          commentaire: ""
+        })
+      });
+      alert("BAT validé avec succès ✅");
+    }
 
-    document.querySelector(".btn-decline").addEventListener("click", () => {
-      const reason = document.getElementById("reason").value.trim();
-      if (!reason) {
-        alert("Merci d’indiquer une raison du refus.");
+    function refuseBAT() {
+      const comment = document.getElementById("reason").value.trim();
+      if (!comment) {
+        alert("Veuillez indiquer la raison du refus.");
         return;
       }
-      fetch(webhookURL, {
+      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "declined", pdf, reason })
-      }).then(() => alert("Votre refus a bien été enregistré."));
-    });
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          status: "refusé",
+          commentaire: comment
+        })
+      });
+      alert("Refus transmis. Merci pour votre retour ✉️");
+    }
   </script>
 </body>
 </html>
+
 
