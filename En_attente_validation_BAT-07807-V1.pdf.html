@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Validation de BAT</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url('banniere-linkedin-brice2025.svg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 800px;
+      width: 100%;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      margin: 20px 0;
+      overflow: auto;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      resize: vertical;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .approve {
+      background-color: #28a745;
+      color: white;
+    }
+    .reject {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖊️ Validation de votre BAT</h1>
+    <iframe src="https://drive.google.com/file/d/1Xuwuza4D9o-jCCzcMBKgGsgUCjto8DPi/preview" allowfullscreen></iframe>
+    <textarea id="comment" placeholder="Veuillez indiquer la raison du refus..."></textarea>
+    <div class="buttons">
+      <button class="approve" onclick="submitBAT(true)">✅ Je valide ce BAT</button>
+      <button class="reject" onclick="submitBAT(false)">❌ Je refuse ce BAT</button>
+    </div>
+  </div>
+
+  <script>
+    const validateBtn = document.querySelector(".approve");
+    const rejectBtn = document.querySelector(".reject");
+    const commentBox = document.getElementById("comment");
+
+    const batKey = "bat_status_En_attente_validation_BAT-07807-V1.pdf";
+    const batStatus = localStorage.getItem(batKey);
+    if (batStatus === "submitted") {
+      disableForm();
+    }
+
+    function disableForm() {
+      validateBtn.disabled = true;
+      rejectBtn.disabled = true;
+      commentBox.disabled = true;
+      validateBtn.style.opacity = "0.6";
+      rejectBtn.style.opacity = "0.6";
+      commentBox.style.opacity = "0.6";
+    }
+
+    function submitBAT(isValid) {
+      const comment = commentBox.value;
+      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: isValid ? "validé" : "refusé",
+          commentaire: comment,
+          bat: "En_attente_validation_BAT-07807-V1.pdf",
+          id_dev_sellsy: "53122311",
+          id_bat_slide: "1lv0-ztGatIV1pSECdlWERnWuu2B4mEDKOJB8rBuSYUM",
+          id_opp_sellsy: "11237141",
+number_devis:"DEV-20250908-07807",
+company_name: "BDE GEA CLERMONT"
+        })
+      }).then(() => {
+        localStorage.setItem(batKey, "submitted");
+        window.location.href = isValid ? "confirmation.html" : "refus.html";
+      });
+    }
+  </script>
+</body>
+</html>
