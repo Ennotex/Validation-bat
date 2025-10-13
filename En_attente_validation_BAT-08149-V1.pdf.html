@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Validation de BAT</title>
+  <style>
+    :root{ --ok:#28a745; --danger:#dc3545; --border:#ccc; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+    .container{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:20px;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+    h1{margin:0 0 12px;color:#333;text-align:center}
+    iframe{width:100%;height:420px;border:none;margin:16px 0;background:#fff}
+    textarea{width:100%;padding:10px;margin:10px 0;resize:vertical;border-radius:6px;border:1px solid var(--border)}
+    .buttons{display:flex;flex-wrap:wrap;gap:10px}
+    button{flex:1;min-width:200px;padding:12px;font-size:16px;font-weight:bold;border:none;border-radius:6px;cursor:pointer}
+    .approve{background:var(--ok);color:#fff}
+    .reject{background:var(--danger);color:#fff}
+    .section-title{margin:18px 0 8px;font-weight:700}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:680px){.grid-2{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr 1fr 1fr}}
+    label{display:block;font-weight:600;margin-bottom:6px}
+    .req::after{content:" *";color:var(--danger);font-weight:700}
+    input[type="text"],input[type="tel"],input[type="email"]{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;background:#fff}
+    .err{color:var(--danger);font-size:12px;display:none;margin-top:4px}
+    input.error{border-color:var(--danger);background:#fff6f6}
+    .hint{font-size:12px;color:#666;margin-top:2px}
+    hr{border:none;border-top:1px solid #e5e7eb;margin:18px 0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖊️ Validation de votre BAT</h1>
+
+    <!-- Aperçu BAT -->
+    <iframe src="https://drive.google.com/file/d/1mcmYjX8IUSwL-ffo6RdXI3EPyiSt-1C5/preview" allowfullscreen></iframe>
+
+    <!-- Adresse de livraison (tous obligatoires) -->
+    <div>
+      <div class="section-title">📬 Adresse de livraison</div>
+      <div class="grid grid-2">
+        <div>
+          <label for="addr-societe" class="req">Nom de la société</label>
+          <input id="addr-societe" type="text" required
+                 value="CLIENT TEST">
+          <div class="err"></div>
+        </div>
+        <div>
+          <label for="addr-nom" class="req">Nom du destinataire</label>
+          <input id="addr-nom" type="text" required
+                 value="forestierLeo">
+          <div class="err"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div>
+          <label for="addr-num" class="req">Numéro</label>
+          <input id="addr-num" type="text" required
+                 value="">
+          <div class="err"></div>
+        </div>
+        <div style="grid-column: span 2;">
+          <label for="addr-rue" class="req">Adresse (rue)</label>
+          <input id="addr-rue" type="text" required
+                 value="70 rue Médicis">
+          <div class="err"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div>
+          <label for="addr-cp" class="req">Code postal</label>
+          <input id="addr-cp" type="text" inputmode="numeric" required
+                 value="91380">
+          <div class="err"></div>
+        </div>
+        <div>
+          <label for="addr-ville" class="req">Ville</label>
+          <input id="addr-ville" type="text" required
+                 value="Chilly-Mazarin">
+          <div class="err"></div>
+        </div>
+        <div>
+          <label for="addr-tel" class="req">Téléphone</label>
+          <input id="addr-tel" type="tel" required
+                 value="">
+          <div class="err"></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="addr-mail" class="req">Adresse e-mail</label>
+          <input id="addr-mail" type="email" required
+                 value="louise@ennotex.fr">
+          <div class="err"></div>
+        </div>
+      </div>
+
+      <div class="hint">Les champs marqués d’un * sont obligatoires.</div>
+    </div>
+
+    <hr/>
+
+    <!-- Commentaire (obligatoire uniquement en cas de refus) -->
+    <textarea id="comment" placeholder="Si vous refusez le BAT, indiquez la raison ici..."></textarea>
+
+    <div class="buttons">
+      <button class="approve" id="btn-approve" onclick="submitBAT(true)" disabled>
+        ✅ Je valide ce BAT
+      </button>
+      <button class="reject" onclick="submitBAT(false)">
+        ❌ Je refuse ce BAT
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // --- Nettoyage : si Make n’a pas remplacé une variable , on vide le champ ---
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.querySelectorAll('input').forEach(inp=>{
+        if(/\{\{.+\}\}/.test(inp.value)) inp.value = "";
+      });
+      attachLiveValidation();
+      updateApproveState();
+    });
+
+    const approveBtn = document.getElementById("btn-approve");
+    const commentBox = document.getElementById("comment");
+
+    function setError(el, msg){
+      el.classList.add('error');
+      const err = el.parentElement.querySelector('.err');
+      if(err){ err.textContent = msg; err.style.display = 'block'; }
+    }
+    function clearError(el){
+      el.classList.remove('error');
+      const err = el.parentElement.querySelector('.err');
+      if(err){ err.textContent = ''; err.style.display = 'none'; }
+    }
+
+    function validateAddress(){
+      const f = {
+        societe: document.getElementById('addr-societe'),
+        nom:     document.getElementById('addr-nom'),
+        numero:  document.getElementById('addr-num'),
+        rue:     document.getElementById('addr-rue'),
+        cp:      document.getElementById('addr-cp'),
+        ville:   document.getElementById('addr-ville'),
+        tel:     document.getElementById('addr-tel'),
+        mail:    document.getElementById('addr-mail')
+      };
+      Object.values(f).forEach(clearError);
+      let ok = true;
+
+      if(!f.societe.value.trim()){ setError(f.societe,'Requis'); ok=false; }
+      if(!f.nom.value.trim()){ setError(f.nom,'Requis'); ok=false; }
+      if(!f.numero.value.trim()){ setError(f.numero,'Requis'); ok=false; }
+      if(!f.rue.value.trim()){ setError(f.rue,'Requis'); ok=false; }
+
+      const cpVal = f.cp.value.trim();
+      if(!/^[0-9]{5}$/.test(cpVal)){ setError(f.cp,'Code postal invalide (5 chiffres)'); ok=false; }
+
+      if(!f.ville.value.trim()){ setError(f.ville,'Requis'); ok=false; }
+
+      const telVal = f.tel.value.trim().replace(/\s+/g,'');
+      if(!/^[0-9+][0-9]{8,14}$/.test(telVal)){ setError(f.tel,'Téléphone invalide'); ok=false; }
+
+      const mailVal = f.mail.value.trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mailVal)){ setError(f.mail,'E-mail invalide'); ok=false; }
+
+      if(!ok){
+        const firstErr = document.querySelector('input.error');
+        if(firstErr){ firstErr.scrollIntoView({behavior:'smooth',block:'center'}); firstErr.focus(); }
+      }
+      return ok;
+    }
+
+    function addressPayload(){
+      return {
+        societe:  document.getElementById("addr-societe").value.trim(),
+        nom:      document.getElementById("addr-nom").value.trim(),
+        numero:   document.getElementById("addr-num").value.trim(),
+        adresse:  document.getElementById("addr-rue").value.trim(),
+        code_postal: document.getElementById("addr-cp").value.trim(),
+        ville:    document.getElementById("addr-ville").value.trim(),
+        telephone:document.getElementById("addr-tel").value.trim(),
+        email:    document.getElementById("addr-mail").value.trim()
+      };
+    }
+
+    function updateApproveState(){
+      approveBtn.disabled = !validateAddress();
+      approveBtn.style.opacity = approveBtn.disabled ? "0.6" : "1";
+      approveBtn.style.cursor  = approveBtn.disabled ? "not-allowed" : "pointer";
+    }
+
+    function attachLiveValidation(){
+      document.querySelectorAll('#addr-societe,#addr-nom,#addr-num,#addr-rue,#addr-cp,#addr-ville,#addr-tel,#addr-mail')
+        .forEach(inp=>{
+          inp.addEventListener('input', ()=>{ validateAddress(); updateApproveState(); });
+          inp.addEventListener('blur',  ()=>{ validateAddress(); updateApproveState(); });
+        });
+    }
+
+    function submitBAT(isValid){
+      const comment = commentBox.value;
+
+      // Si le client accepte -> adresse obligatoire
+      if(isValid && !validateAddress()){ updateApproveState(); return; }
+
+      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: isValid ? "validé" : "refusé",
+          commentaire: comment,
+          bat: "En_attente_validation_BAT-08149-V1.pdf",
+          id_dev_sellsy: "53122861",
+          id_bat_slide: "1-7tH8nGlDS8l5zR9mDj7KTn2vfIG8rRgPqvcz5lO1NQ",
+          id_opp_sellsy: "11237393",
+          number_devis: "DEV-20251013-08149",
+          company_name: "CLIENT TEST",
+          name_client: "CLIENT TEST",
+          shipping_address: addressPayload()
+        })
+      }).then(()=>{
+        localStorage.setItem("bat_status_En_attente_validation_BAT-08149-V1.pdf","submitted");
+        window.location.href = isValid ? "confirmation.html" : "refus.html";
+      });
+    }
+  </script>
+</body>
+</html>
+{
+    "subflows": [
+        {
+            "flow": [
+                {
+                    "id": 275,
+                    "module": "util:SetVariable2",
+                    "version": 1,
+                    "parameters": {},
+                    "mapper": {
+                        "name": "htmlcontent",
+                        "scope": "roundtrip",
+                        "value": "<!DOCTYPE html>\r\n<html lang=\"fr\">\r\n<head>\r\n  <meta charset=\"UTF-8\" />\r\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\r\n  <title>Validation de BAT</title>\r\n  <style>\r\n    body {\r\n      margin: 0;\r\n      font-family: Arial, sans-serif;\r\n      background: url('banniere-linkedin-brice2025.svg') no-repeat center center fixed;\r\n      background-size: cover;\r\n      display: flex;\r\n      justify-content: center;\r\n      align-items: center;\r\n      min-height: 100vh;\r\n    }\r\n    .container {\r\n      background-color: rgba(255, 255, 255, 0.95);\r\n      padding: 20px;\r\n      border-radius: 12px;\r\n      max-width: 800px;\r\n      width: 100%;\r\n    }\r\n    h1 {\r\n      text-align: center;\r\n      color: #333;\r\n    }\r\n    iframe {\r\n      width: 100%;\r\n      height: 500px;\r\n      border: none;\r\n      margin: 20px 0;\r\n      overflow: auto;\r\n    }\r\n    textarea {\r\n      width: 100%;\r\n      padding: 10px;\r\n      margin: 10px 0;\r\n      resize: vertical;\r\n      border-radius: 6px;\r\n      border: 1px solid #ccc;\r\n    }\r\n    .buttons {\r\n      display: flex;\r\n      justify-content: space-between;\r\n      gap: 10px;\r\n    }\r\n    button {\r\n      flex: 1;\r\n      padding: 12px;\r\n      font-size: 16px;\r\n      font-weight: bold;\r\n      border: none;\r\n      border-radius: 6px;\r\n      cursor: pointer;\r\n    }\r\n    .approve {\r\n      background-color: #28a745;\r\n      color: white;\r\n    }\r\n    .reject {\r\n      background-color: #dc3545;\r\n      color: white;\r\n    }\r\n  </style>\r\n</head>\r\n<body>\r\n  <div class=\"container\">\r\n    <h1>🖊️ Validation de votre BAT</h1>\r\n    <iframe src=\"https://drive.google.com/file/d/1mcmYjX8IUSwL-ffo6RdXI3EPyiSt-1C5/preview\" allowfullscreen></iframe>\r\n    <textarea id=\"comment\" placeholder=\"Veuillez indiquer la raison du refus...\"></textarea>\r\n    <div class=\"buttons\">\r\n      <button class=\"approve\" onclick=\"submitBAT(true)\">✅ Je valide ce BAT</button>\r\n      <button class=\"reject\" onclick=\"submitBAT(false)\">❌ Je refuse ce BAT</button>\r\n    </div>\r\n  </div>\r\n\r\n  <script>\r\n    const validateBtn = document.querySelector(\".approve\");\r\n    const rejectBtn = document.querySelector(\".reject\");\r\n    const commentBox = document.getElementById(\"comment\");\r\n\r\n    const batKey = \"bat_status_En_attente_validation_BAT-08149-V1.pdf\";\r\n    const batStatus = localStorage.getItem(batKey);\r\n    if (batStatus === \"submitted\") {\r\n      disableForm();\r\n    }\r\n\r\n    function disableForm() {\r\n      validateBtn.disabled = true;\r\n      rejectBtn.disabled = true;\r\n      commentBox.disabled = true;\r\n      validateBtn.style.opacity = \"0.6\";\r\n      rejectBtn.style.opacity = \"0.6\";\r\n      commentBox.style.opacity = \"0.6\";\r\n    }\r\n\r\n    function submitBAT(isValid) {\r\n      const comment = commentBox.value;\r\n      fetch(\"https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76\", {\r\n        method: \"POST\",\r\n        headers: { \"Content-Type\": \"application/json\" },\r\n        body: JSON.stringify({\r\n          status: isValid ? \"validé\" : \"refusé\",\r\n          commentaire: comment,\r\n          bat: \"En_attente_validation_BAT-08149-V1.pdf\",\r\n          id_dev_sellsy: \"53122861\",\r\n          id_bat_slide: \"1-7tH8nGlDS8l5zR9mDj7KTn2vfIG8rRgPqvcz5lO1NQ\",\r\n          id_opp_sellsy: \"11237393\",\nnumber_devis:\"DEV-20251013-08149\",\ncompany_name: \"CLIENT TEST\",name_client:\"CLIENT TEST\"\n\n        })\r\n      }).then(() => {\r\n        localStorage.setItem(batKey, \"submitted\");\r\n        window.location.href = isValid ? \"confirmation.html\" : \"refus.html\";\r\n      });\r\n    }\r\n  </script>\r\n</body>\r\n</html>
