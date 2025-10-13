@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Validation de production - {{18.name}}</title>
+
+  <!-- AJOUT IP GUARD -->
+  <style>body{visibility:hidden}</style>
+  <script>
+    const ALLOWED_IPS = new Set([
+      "82.96.163.201",
+      "82.96.163.204",
+      "82.96.163.*",
+      " 2a05:6e02:1040:6a10:6f17:81a7:c037:8e32",
+      "2a05:6e02:1040:6a10:cce2:e54f:713e:a228",
+      "2a05:6e02:1040:6a10:e555:3a61:d8b5:af3"
+    ]);
+    function deny(){
+      document.body.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Arial,sans-serif">
+          <div style="max-width:560px;padding:24px;border-radius:12px;box-shadow:0 0 12px rgba(0,0,0,.1);background:#fff;text-align:center">
+            <h2 style="margin:0 0 8px">Accès refusé</h2>
+            <p style="margin:0 0 16px">Cette page est réservée aux ateliers ENNOTEX.</p>
+            <small style="color:#666">Si vous êtes sur site, vérifiez que vous êtes connecté au réseau de l’atelier.</small>
+          </div>
+        </div>`;
+      document.body.style.visibility = "visible";
+    }
+    (async () => {
+      try {
+        let ip = "";
+        try {
+          const r = await fetch("https://api64.ipify.org?format=json",{cache:"no-store"});
+          ip = (await r.json()).ip || "";
+        } catch {}
+        if (!ip) {
+          const r4 = await fetch("https://api.ipify.org?format=json",{cache:"no-store"});
+          ip = (await r4.json()).ip || "";
+        }
+        ip = ip.toLowerCase();
+        window.__client_ip = ip;
+        if (ALLOWED_IPS.has(ip)) document.body.style.visibility = "visible";
+        else deny();
+      } catch { deny(); }
+    })();
+  </script>
+  <noscript>
+    <style>body{visibility:visible}</style>
+    <div style="padding:16px;background:#fff3cd;color:#664d03;text-align:center">
+      JavaScript requis pour accéder à cette page.
+    </div>
+  </noscript>
+  <!-- /AJOUT IP GUARD -->
+
+  <style>
+    :root{
+      --primary:#0033cc;
+      --primary-dark:#001a80;
+      --ok:#28a745;
+      --warn:#ff8c00;
+      --danger:#d9534f;
+    }
+    *{box-sizing:border-box}
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url('https://ennotex.github.io/assets/bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      background-color: rgba(255,255,255,.95);
+      padding: 28px;
+      border-radius: 12px;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 6px 20px rgba(0,0,0,.08);
+      text-align:center;
+    }
+    h1 { margin: 0 0 10px; font-size: 22px; }
+    p.lead{margin:0 0 18px;color:#444}
+    button {
+      margin: 10px 0;
+      padding: 14px 18px;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: var(--primary);
+      color: white;
+      transition: background-color 0.2s ease, opacity .2s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    button:hover { background-color: var(--primary-dark); }
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .drive { background-color: var(--ok); }
+    .drive:hover { background-color: #1c7c31; }
+    .gls { background-color: var(--warn); }
+    .gls:hover { background-color: #cc6f00; }
+    .row { margin-top: 10px; text-align:left; }
+    label { display:block; font-weight:600; margin-bottom:6px; }
+    input[type="text"], input[type="number"], input[type="tel"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      font-size: 15px;
+      background:#fff;
+    }
+    input.error{border-color: var(--danger); background:#fff6f6}
+    small.muted{color:#666}
+    .err{color:var(--danger);font-size:12px;display:none;margin-top:6px}
+    hr{margin:18px 0;border:none;border-top:1px solid #e5e7eb;}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:560px){
+      .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    }
+  </style>
+
+  <!-- Webhook + logique GLS -->
+  <script>
+    const WEBHOOK_URL = "https://hook.eu1.make.com/brxbqvpfpgh2mgrwuvpm5gui6qojznwn";
+
+    const qs = s => document.querySelector(s);
+    const qsa = s => Array.from(document.querySelectorAll(s));
+
+    function setError(el, msg){
+      el.classList.add('error');
+      const err = el.parentElement.querySelector('.err');
+      if(err){ err.textContent = msg; err.style.display = 'block'; }
+    }
+    function clearError(el){
+      el.classList.remove('error');
+      const err = el.parentElement.querySelector('.err');
+      if(err){ err.textContent = ''; err.style.display = 'none'; }
+    }
+
+    function validateAddress(){
+      const fields = {
+        societe: qs('#addr-societe'),
+        nom: qs('#addr-nom'),
+        adresse: qs('#addr-adresse'),
+        cp: qs('#addr-cp'),
+        ville: qs('#addr-ville'),
+        tel: qs('#addr-tel')
+      };
+      let ok = true;
+
+      // reset
+      Object.values(fields).forEach(clearError);
+
+      // règles FR simples
+      if(!fields.societe.value.trim()){ setError(fields.societe,'Requis'); ok=false; }
+      if(!fields.nom.value.trim()){ setError(fields.nom,'Requis'); ok=false; }
+      if(!fields.adresse.value.trim()){ setError(fields.adresse,'Requis'); ok=false; }
+
+      const cpVal = fields.cp.value.trim();
+      if(!/^[0-9]{5}$/.test(cpVal)){ setError(fields.cp,'Code postal invalide (5 chiffres)'); ok=false; }
+
+      if(!fields.ville.value.trim()){ setError(fields.ville,'Requis'); ok=false; }
+
+      const telVal = fields.tel.value.trim().replace(/\s+/g,'');
+      if(!/^[0-9+][0-9]{8,14}$/.test(telVal)){ setError(fields.tel,'Téléphone invalide'); ok=false; }
+
+      if(!ok){
+        const firstErr = qs('input.error');
+        if(firstErr){ firstErr.scrollIntoView({behavior:'smooth',block:'center'}); firstErr.focus(); }
+      }
+      return ok;
+    }
+
+    async function safeJson(r){ try{ return await r.json(); }catch{return null; } }
+
+    async function sendToWebhook(payload){
+      try{
+        const r = await fetch(WEBHOOK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          cache: "no-store",
+          mode: "cors"
+        });
+        if (r.ok) return { ok:true, via:"fetch", status:r.status, data: await safeJson(r) };
+        throw new Error("HTTP "+r.status);
+      }catch(e){
+        try{
+          if (navigator.sendBeacon){
+            const blob = new Blob([JSON.stringify(payload)], {type:"application/json"});
+            navigator.sendBeacon(WEBHOOK_URL, blob);
+            return { ok:true, via:"beacon" };
+          }
+        }catch{}
+        try{
+          const qs = new URLSearchParams({
+            data: btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
+          });
+          const img = new Image();
+          img.src = WEBHOOK_URL + "?" + qs.toString();
+          return { ok:true, via:"img" };
+        }catch{}
+        return { ok:false, error: e?.message || "send failed" };
+      }
+    }
+
+    async function createGLS(){
+      // validation obligatoire
+      const isValid = validateAddress();
+      if(!isValid) return;
+
+      const qtyEl = document.getElementById("gls-qty");
+      const btn = document.getElementById("btn-gls");
+      const qty = Math.max(1, parseInt(qtyEl.value,10) || 1);
+
+      const address = {
+        societe: document.getElementById("addr-societe").value.trim(),
+        nom: document.getElementById("addr-nom").value.trim(),
+        adresse: document.getElementById("addr-adresse").value.trim(),
+        code_postal: document.getElementById("addr-cp").value.trim(),
+        ville: document.getElementById("addr-ville").value.trim(),
+        telephone: document.getElementById("addr-tel").value.trim()
+      };
+
+      btn.disabled = true;
+      const lbl = btn.innerHTML;
+      btn.innerHTML = "⏳ Création en cours…";
+
+      const payload = {
+        action: "create_gls_label",
+        nb_colis: qty,
+        source: "validation_production",
+        context: {
+          name: "{{18.name}}",
+          preview_url: "{{25.`url preview`}}",
+          upload_url: "{{29.`url fillout fichier`}}",
+          compare_url: "{{1.tally_compare}}",
+          drive_folder: "{{12.webViewLink}}",
+          drive_file_id:"{{12.id}}",
+          id_devis_sellsy:"{{1.id_dev_sellsy}}",
+          id_opp_sellsy:"{{1.id_opp_sellsy}}",
+          number_devis:"{{1.number_devis}}",
+          name_client:"{{1.name_client}}"
+        },
+        address: address,
+        client: {
+          ip: (window.__client_ip || ""),
+          ua: navigator.userAgent,
+          at: new Date().toISOString()
+        }
+      };
+
+      const res = await sendToWebhook(payload);
+      btn.disabled = false;
+      btn.innerHTML = lbl;
+
+      if(res.ok){
+        alert("✅ Demande envoyée.\nNombre de colis : "+qty);
+      }else{
+        alert("❌ Échec d’envoi au webhook.\nDétail : "+(res.error||""));
+      }
+    }
+
+    // validation instantanée au blur
+    document.addEventListener('DOMContentLoaded', ()=>{
+      document.querySelectorAll('input[required]').forEach(inp=>{
+        inp.addEventListener('blur', ()=>{
+          if(inp.id==='addr-cp' || inp.id==='addr-tel' || inp.value.trim()===''){
+            validateAddress();
+          }else{
+            clearError(inp);
+          }
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>{{18.name}}</h1>
+    <p class="lead">Merci de suivre les étapes de validation ci-dessous :</p>
+
+    <button onclick="window.open('{{25.`url preview`}}', '_blank')">📄 Visualiser le BAT</button><br>
+    <button onclick="window.open('{{29.`url fillout fichier`}}', '_blank')">📸 Envoyer les fichiers de production</button><br>
+    <button onclick="window.open('{{1.tally_compare}}', '_blank')">🔍 Comparer le BAT et le premier test</button><br>
+    <button class="drive" onclick="window.open('{{12.webViewLink}}', '_blank')">📂 Accéder au Dossier</button>
+
+    <hr>
+    <h3>📬 Adresse de livraison</h3>
+    <div class="row">
+      <label for="addr-societe">Nom de la société</label>
+      <input id="addr-societe" type="text" placeholder="Ex : Ennotex SAS" autocomplete="organization" required>
+      <div class="err"></div>
+    </div>
+    <div class="row">
+      <label for="addr-nom">Nom du destinataire</label>
+      <input id="addr-nom" type="text" placeholder="Ex : Brice Dubois" autocomplete="name" required>
+      <div class="err"></div>
+    </div>
+    <div class="row">
+      <label for="addr-adresse">Adresse</label>
+      <input id="addr-adresse" type="text" placeholder="N° et rue" autocomplete="address-line1" required>
+      <div class="err"></div>
+    </div>
+    <div class="grid-2">
+      <div class="row">
+        <label for="addr-cp">Code postal</label>
+        <input id="addr-cp" type="text" placeholder="Ex : 01000" inputmode="numeric" autocomplete="postal-code" required>
+        <div class="err"></div>
+      </div>
+      <div class="row">
+        <label for="addr-ville">Ville</label>
+        <input id="addr-ville" type="text" placeholder="Ex : Bourg-en-Bresse" autocomplete="address-level2" required>
+        <div class="err"></div>
+      </div>
+    </div>
+    <div class="row">
+      <label for="addr-tel">Téléphone (si différent du devis)</label>
+      <input id="addr-tel" type="tel" placeholder="Ex : 06 12 34 56 78" inputmode="tel" autocomplete="tel" required>
+      <div class="err"></div>
+    </div>
+
+    <hr>
+    <div class="row">
+      <label for="gls-qty">Nombre de colis</label>
+      <input id="gls-qty" type="number" min="1" step="1" value="1" />
+      <div><small class="muted">Indique le nombre d’étiquettes GLS à générer.</small></div>
+      <button id="btn-gls" class="gls" onclick="createGLS()">📦 Créer l’étiquette de livraison</button>
+    </div>
+  </div>
+</body>
+</html>
