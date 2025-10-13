@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Validation de BAT</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url('banniere-linkedin-brice2025.svg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 800px;
+      width: 100%;
+    }
+    h1 { text-align: center; color: #333; }
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      margin: 20px 0;
+      overflow: auto;
+      background:#fff;
+      border-radius:8px;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      resize: vertical;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .approve { background-color: #28a745; color: white; }
+    .reject  { background-color: #dc3545; color: white; }
+
+    /* --- Adresse de livraison --- */
+    .section-title{margin:18px 0 8px;font-weight:700}
+    .grid{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:680px){ .grid-2{grid-template-columns:1fr 1fr} .grid-3{grid-template-columns:1fr 1fr 1fr} }
+    label{display:block;font-weight:600;margin-bottom:6px}
+    .req::after{content:" *"; color:#dc3545; font-weight:700;}
+    input[type="text"], input[type="tel"], input[type="email"]{
+      width:100%;padding:10px;border:1px solid #ccc;border-radius:6px;background:#fff;
+    }
+    input[disabled], textarea[disabled]{opacity:.6}
+    .err{color:#dc3545;font-size:12px;display:none;margin-top:4px}
+    input.error{border-color:#dc3545;background:#fff6f6}
+    .hint{font-size:12px;color:#666;margin-top:2px}
+    hr{border:none;border-top:1px solid #e5e7eb;margin:18px 0}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖊️ Validation de votre BAT</h1>
+
+    <!-- Aperçu BAT -->
+    <iframe src="https://drive.google.com/file/d/1KFHqeM-PDwKxD00Ya4gGyytM41WbH330/preview" allowfullscreen></iframe>
+
+    <!-- Adresse de livraison (tous obligatoires) -->
+    <div>
+      <div class="section-title">📬 Adresse de livraison</div>
+
+      <div class="grid grid-2">
+        <div>
+          <label for="addr-societe" class="req">Nom de la société</label>
+          <input id="addr-societe" type="text" autocomplete="organization" required value="CLIENT TEST">
+          <div class="err"></div>
+        </div>
+        <div>
+          <label for="addr-nom" class="req">Nom du destinataire</label>
+          <input id="addr-nom" type="text" autocomplete="name" required value="forestier Leo">
+          <div class="err"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div>
+          <label for="addr-num" class="req">Numéro</label>
+          <input id="addr-num" type="text" autocomplete="address-line1" required value="">
+          <div class="err"></div>
+        </div>
+        <div style="grid-column: span 2;">
+          <label for="addr-rue" class="req">Adresse (rue)</label>
+          <input id="addr-rue" type="text" autocomplete="address-line2" required value="48 avenue de fontainebleau   ">
+          <div class="err"></div>
+        </div>
+      </div>
+
+      <div class="grid grid-3">
+        <div>
+          <label for="addr-cp" class="req">Code postal</label>
+          <input id="addr-cp" type="text" inputmode="numeric" autocomplete="postal-code" required value="773110">
+          <div class="err"></div>
+        </div>
+        <div>
+          <label for="addr-ville" class="req">Ville</label>
+          <input id="addr-ville" type="text" autocomplete="address-level2" required value="saint fargeau ponthierry">
+          <div class="err"></div>
+        </div>
+        <div>
+          <label for="addr-tel" class="req">Téléphone</label>
+          <input id="addr-tel" type="tel" autocomplete="tel" required value="">
+          <div class="err"></div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="addr-mail" class="req">Adresse e-mail</label>
+          <input id="addr-mail" type="email" autocomplete="email" required value="louise@ennotex.fr">
+          <div class="err"></div>
+        </div>
+      </div>
+
+      <div class="hint">Les champs marqués d’un * sont obligatoires.</div>
+    </div>
+
+    <hr/>
+
+    <textarea id="comment" placeholder="Veuillez indiquer la raison du refus..."></textarea>
+
+    <div class="buttons">
+      <button class="approve" onclick="submitBAT(true)" id="btn-approve" disabled>✅ Je valide ce BAT</button>
+      <button class="reject"  onclick="submitBAT(false)" id="btn-reject">❌ Je refuse ce BAT</button>
+    </div>
+  </div>
+
+  <script>
+    const approveBtn = document.getElementById("btn-approve");
+    const rejectBtn  = document.getElementById("btn-reject");
+    const commentBox = document.getElementById("comment");
+
+    // ⚠️ On NE désactive plus les champs au chargement.
+    // const batKey = "bat_status_En_attente_validation_BAT-08149-V3.pdf";
+    // const batStatus = localStorage.getItem(batKey);
+    // if (batStatus === "submitted") disableForm();
+
+    // Nettoie simplement les placeholders non remplacés (sans toucher à disabled)
+    document.querySelectorAll('input').forEach(inp=>{
+      const v = (inp.value || "").replace(/\s+/g,' ').trim();
+      if(/\{\{.+\}\}/.test(v)) inp.value = "";
+      else inp.value = v;
+    });
+
+    function setError(el, msg){
+      el.classList.add('error');
+      const err = el.parentElement.querySelector('.err');
+      if(err){ err.textContent = msg; err.style.display = 'block'; }
+    }
+    function clearError(el){
+      el.classList.remove('error');
+      const err = el.parentElement.querySelector('.err');
+      if(err){ err.textContent = ''; err.style.display = 'none'; }
+    }
+
+    function validateAddress(){
+      const f = {
+        societe: document.getElementById('addr-societe'),
+        nom:     document.getElementById('addr-nom'),
+        numero:  document.getElementById('addr-num'),
+        rue:     document.getElementById('addr-rue'),
+        cp:      document.getElementById('addr-cp'),
+        ville:   document.getElementById('addr-ville'),
+        tel:     document.getElementById('addr-tel'),
+        mail:    document.getElementById('addr-mail')
+      };
+      Object.values(f).forEach(clearError);
+      let ok = true;
+
+      if(!f.societe.value.trim()){ setError(f.societe,'Requis'); ok=false; }
+      if(!f.nom.value.trim()){ setError(f.nom,'Requis'); ok=false; }
+      if(!f.numero.value.trim()){ setError(f.numero,'Requis'); ok=false; }
+      if(!f.rue.value.trim()){ setError(f.rue,'Requis'); ok=false; }
+
+      const cpVal = f.cp.value.trim();
+      if(!/^\d{5}$/.test(cpVal)){ setError(f.cp,'Code postal invalide (5 chiffres)'); ok=false; }
+
+      if(!f.ville.value.trim()){ setError(f.ville,'Requis'); ok=false; }
+
+      const telVal = f.tel.value.trim().replace(/\s+/g,'');
+      if(!/^[0-9+][0-9]{8,14}$/.test(telVal)){ setError(f.tel,'Téléphone invalide'); ok=false; }
+
+      const mailVal = f.mail.value.trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mailVal)){ setError(f.mail,'E-mail invalide'); ok=false; }
+
+      if(!ok){
+        const firstErr = document.querySelector('input.error');
+        if(firstErr){ firstErr.scrollIntoView({behavior:'smooth',block:'center'}); firstErr.focus(); }
+      }
+      return ok;
+    }
+
+    function updateApproveState(){
+      const ok = validateAddress();
+      approveBtn.disabled = !ok;
+      approveBtn.style.opacity = ok ? "1" : "0.6";
+      approveBtn.style.cursor  = ok ? "pointer" : "not-allowed";
+    }
+
+    function attachLiveValidation(){
+      document.querySelectorAll('#addr-societe,#addr-nom,#addr-num,#addr-rue,#addr-cp,#addr-ville,#addr-tel,#addr-mail')
+        .forEach(inp=>{
+          inp.addEventListener('input', updateApproveState);
+          inp.addEventListener('blur',  updateApproveState);
+        });
+    }
+    attachLiveValidation();
+    updateApproveState();
+
+    // On ne désactive plus jamais les inputs automatiquement
+    function disableForm() {
+      approveBtn.disabled = true;
+      rejectBtn.disabled  = true;
+      commentBox.disabled = true;
+      // document.querySelectorAll('input').forEach(i=>i.disabled=true); // SUPPRIMÉ
+      approveBtn.style.opacity = "0.6";
+      rejectBtn.style.opacity  = "0.6";
+      commentBox.style.opacity = "0.6";
+    }
+
+    function addressPayload(){
+      return {
+        societe:  document.getElementById("addr-societe").value.trim(),
+        nom:      document.getElementById("addr-nom").value.trim(),
+        numero:   document.getElementById("addr-num").value.trim(),
+        adresse:  document.getElementById("addr-rue").value.trim(),
+        code_postal: document.getElementById("addr-cp").value.trim(),
+        ville:    document.getElementById("addr-ville").value.trim(),
+        telephone:document.getElementById("addr-tel").value.trim(),
+        email:    document.getElementById("addr-mail").value.trim()
+      };
+    }
+
+    function submitBAT(isValid) {
+      if (isValid && !validateAddress()) { updateApproveState(); return; }
+
+      const comment = commentBox.value;
+      fetch("https://hook.eu1.make.com/1845ruicf13lufrf3jtnyn2438owof76", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: isValid ? "validé" : "refusé",
+          commentaire: comment,
+          bat: "En_attente_validation_BAT-08149-V3.pdf",
+          id_dev_sellsy: "53122861",
+          id_bat_slide: "1-7tH8nGlDS8l5zR9mDj7KTn2vfIG8rRgPqvcz5lO1NQ",
+          id_opp_sellsy: "11237393",
+          number_devis:"DEV-20251013-08149",
+          company_name: "CLIENT TEST",
+          name_client:"CLIENT TEST",
+          shipping_address: addressPayload()
+        })
+      }).then(() => {
+        // On redirige sans jamais mettre disabled sur les inputs
+        localStorage.setItem("bat_status_En_attente_validation_BAT-08149-V3.pdf", "submitted");
+        window.location.href = isValid ? "confirmation.html" : "refus.html";
+      });
+    }
+  </script>
+</body>
+</html>
